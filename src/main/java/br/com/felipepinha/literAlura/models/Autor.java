@@ -16,7 +16,7 @@ public class Autor {
     private Integer birthYear;
     private Integer deathYear;
 
-    @OneToMany(mappedBy = "autor", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "autor", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<Livro> livros;
 
     // Getters e Setters

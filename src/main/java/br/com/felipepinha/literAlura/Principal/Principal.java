@@ -2,22 +2,26 @@ package br.com.felipepinha.literAlura.Principal;
 
 import br.com.felipepinha.literAlura.models.*;
 import br.com.felipepinha.literAlura.repositories.AutorRepository;
+import br.com.felipepinha.literAlura.repositories.LivroRepository;
 import br.com.felipepinha.literAlura.service.ConsumoApi;
 import br.com.felipepinha.literAlura.service.ConverteDados;
 
 import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 public class Principal {
     Scanner scanner = new Scanner(System.in);
     private AutorRepository autorRepository;
+    private LivroRepository livroRepository;
 
     String url = "https://gutendex.com/books/?search=";
     ConsumoApi consumoApi = new ConsumoApi();
     ConverteDados conversor = new ConverteDados();
 
-    public Principal(AutorRepository autorRepository) {
+    public Principal(AutorRepository autorRepository, LivroRepository livroRepository) {
         this.autorRepository = autorRepository;
+        this.livroRepository = livroRepository;
     }
 
     public void exibeMenu() {
@@ -29,6 +33,8 @@ public class Principal {
                     Escolha o número de sua opção
                     
                     1 - Buscar livro pelo título
+                    2 - Listar livros registrados
+                    3 - Listar autores registrados
                     
                     
                     0 - Sair
@@ -39,6 +45,12 @@ public class Principal {
             switch (opt) {
                 case 1:
                     buscaLivro();
+                    break;
+                case 2:
+                    livrosRegistrados();
+                    break;
+                case 3:
+                    autoresRegistrados();
                     break;
                 case 0:
                     System.out.println("Saindo...");
@@ -82,7 +94,47 @@ public class Principal {
             autor.setLivros(List.of(livro)); // Associa o livro ao autor
 
             autorRepository.save(autor);
-            System.out.println("Livro e autor salvos com sucesso.");
+            exibeLivro(livro);
         }
+    }
+
+    private void livrosRegistrados() {
+        List<Livro> livros = livroRepository.findAll();
+
+        livros.forEach(l -> exibeLivro(l));
+    }
+
+    private  void autoresRegistrados() {
+        List<Autor> autores = autorRepository.findAll();
+
+        autores.forEach(a -> exibeAutor(a));
+    }
+
+    private void exibeLivro(Livro livro) {
+        System.out.println("------- LIVRO -------");
+        System.out.println("""
+                Titulo: %s
+                Autor: %s
+                Idioma: %s
+                Número de downloads: %s
+                """.formatted(livro.getTitle(), livro.getAutor().getName(),
+                        livro.getLanguage(), livro.getDownloadCount())
+                );
+    }
+
+    private void exibeAutor(Autor autor) {
+        String titulos = autor.getLivros().stream()
+                        .map(Livro::getTitle)
+                        .collect(Collectors.joining(", ", "[", "]"));
+
+        System.out.println("------- Autor -------");
+        System.out.println("""
+                Nome: %s
+                Ano de nascimento: %s
+                Ano de falescimento: %s
+                livros: %s
+                """.formatted(autor.getName(), autor.getBirthYear(),
+                autor.getDeathYear(), titulos)
+        );
     }
 }
