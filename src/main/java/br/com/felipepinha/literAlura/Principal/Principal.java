@@ -105,13 +105,12 @@ public class Principal {
             livro.setLanguage(Idioma.fromString(
                     livroDto.languages().isEmpty() ? null : livroDto.languages().get(0)
             ));
-            livro.setAutor(autor); // Associa o livro ao autor
+            livro.setAutor(autor);
 
             if (autor.getId() == null) {
-                autor.setLivros(List.of(livro)); // Primeiro livro para o autor novo
-                autorRepository.save(autor); // Salva o autor e o livro em cascata
+                autor.setLivros(List.of(livro));
+                autorRepository.save(autor);
             } else {
-                // Autor já existe, só salvar o livro com o autor setado
                 livroRepository.save(livro);
             }
 
