@@ -35,6 +35,7 @@ public class Principal {
                     1 - Buscar livro pelo título
                     2 - Listar livros registrados
                     3 - Listar autores registrados
+                    4 - Listar autores vivos em um determinado ano
                     
                     
                     0 - Sair
@@ -51,6 +52,9 @@ public class Principal {
                     break;
                 case 3:
                     autoresRegistrados();
+                    break;
+                case 4:
+                    autoresVivosNoAno();
                     break;
                 case 0:
                     System.out.println("Saindo...");
@@ -106,6 +110,16 @@ public class Principal {
 
     private  void autoresRegistrados() {
         List<Autor> autores = autorRepository.findAll();
+
+        autores.forEach(a -> exibeAutor(a));
+    }
+
+    private void autoresVivosNoAno() {
+        System.out.println("Informe um ano");
+        var ano = scanner.nextInt();
+        scanner.nextLine();
+
+        List<Autor> autores = autorRepository.findAutoresVivosNoAno(ano);
 
         autores.forEach(a -> exibeAutor(a));
     }
