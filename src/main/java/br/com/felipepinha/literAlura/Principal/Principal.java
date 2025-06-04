@@ -7,6 +7,7 @@ import br.com.felipepinha.literAlura.service.ConsumoApi;
 import br.com.felipepinha.literAlura.service.ConverteDados;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 
@@ -77,7 +78,7 @@ public class Principal {
         String json = consumoApi.obterDados(busca);
         GutendexResponse resposta = conversor.obterDados(json, GutendexResponse.class);
 
-        if(resposta.results().isEmpty()) {
+        if (resposta.results().isEmpty()) {
             System.out.println("Não foram encontrados resultados para " + titulo);
             System.out.println("Tente novamente...");
             return;
@@ -86,10 +87,17 @@ public class Principal {
         LivroDTO livroDto = resposta.results().get(0);
 
         for (AutorDTO autorDto : livroDto.authors()) {
-            Autor autor = new Autor();
-            autor.setName(autorDto.name());
-            autor.setBirthYear(autorDto.birth_year());
-            autor.setDeathYear(autorDto.death_year());
+            // Verifica se o autor já existe no banco
+            Optional<Autor> autorOptional = autorRepository.findByNameAndBirthYearAndDeathYear(
+                    autorDto.name(), autorDto.birth_year(), autorDto.death_year());
+
+            Autor autor = autorOptional.orElseGet(() -> {
+                Autor novoAutor = new Autor();
+                novoAutor.setName(autorDto.name());
+                novoAutor.setBirthYear(autorDto.birth_year());
+                novoAutor.setDeathYear(autorDto.death_year());
+                return novoAutor;
+            });
 
             Livro livro = new Livro();
             livro.setTitle(livroDto.title());
@@ -97,14 +105,20 @@ public class Principal {
             livro.setLanguage(Idioma.fromString(
                     livroDto.languages().isEmpty() ? null : livroDto.languages().get(0)
             ));
-            livro.setAutor(autor);
+            livro.setAutor(autor); // Associa o livro ao autor
 
-            autor.setLivros(List.of(livro)); // Associa o livro ao autor
+            if (autor.getId() == null) {
+                autor.setLivros(List.of(livro)); // Primeiro livro para o autor novo
+                autorRepository.save(autor); // Salva o autor e o livro em cascata
+            } else {
+                // Autor já existe, só salvar o livro com o autor setado
+                livroRepository.save(livro);
+            }
 
-            autorRepository.save(autor);
             exibeLivro(livro);
         }
     }
+
 
     private void livrosRegistrados() {
         List<Livro> livros = livroRepository.findAll();
